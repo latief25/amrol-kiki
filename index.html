@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Game Isen Gasan Amrol & Kiki</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!--
+    Catatan:
+    - Taruh berkas audio doa pian di sebelah file ini dengan nama: doa.mp3
+    - Di bagian akhir ada tombol "Putar suara doa".
+  -->
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(
+          circle at top,
+          #fef6ff 0,
+          #f3f4ff 45%,
+          #e5f6ff 100%
+        );
+        color: #111827;
+      }
+
+      .wrapper {
+        width: 100%;
+        max-width: 480px;
+        padding: 16px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        padding: 24px 20px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+        backdrop-filter: blur(18px);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: -50%;
+        opacity: 0.08;
+        background: radial-gradient(circle at 0 0, #f97373 0, transparent 40%),
+          radial-gradient(circle at 100% 100%, #6366f1 0, transparent 45%);
+        pointer-events: none;
+      }
+
+      .card-inner {
+        position: relative;
+        z-index: 1;
+      }
+
+      h1,
+      h2 {
+        margin-bottom: 8px;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+      }
+
+      h2 {
+        font-size: 1.25rem;
+      }
+
+      p {
+        margin-bottom: 8px;
+        line-height: 1.4;
+        font-size: 0.95rem;
+      }
+
+      .subtitle {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin-bottom: 14px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 18px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: transform 0.15s ease, box-shadow 0.15s ease,
+          background 0.15s ease;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+        background: linear-gradient(135deg, #6366f1, #ec4899);
+        color: #fff;
+        margin-top: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px) scale(1.02);
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.25);
+      }
+
+      .btn:active {
+        transform: translateY(0) scale(0.98);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+      }
+
+      .screen {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: rgba(15, 23, 42, 0.06);
+        margin-bottom: 8px;
+      }
+
+      .emoji-big {
+        font-size: 2.3rem;
+        margin-bottom: 8px;
+      }
+
+      .message {
+        min-height: 26px;
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
+
+      .small {
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      .choices {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 16px;
+      }
+
+      .choice-btn {
+        min-width: 96px;
+        padding: 9px 6px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        background: rgba(248, 250, 252, 0.95);
+        cursor: pointer;
+        font-size: 0.95rem;
+        text-transform: lowercase;
+        transition: transform 0.12s ease, box-shadow 0.12s ease,
+          border-color 0.12s ease, background 0.12s ease;
+      }
+
+      .choice-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+        border-color: #6366f1;
+        background: #eef2ff;
+      }
+
+      .choice-btn.correct {
+        border-color: #22c55e;
+        background: #ecfdf3;
+      }
+
+      .choice-btn.wrong {
+        border-color: #f97373;
+        background: #fff1f2;
+      }
+
+      .choice-area-move {
+        position: relative;
+        height: 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .choice-btn.movable {
+        position: relative;
+        will-change: transform;
+      }
+
+      .divider {
+        width: 60%;
+        height: 1px;
+        margin: 14px auto;
+        background: linear-gradient(
+          to right,
+          transparent,
+          rgba(148, 163, 184, 0.8),
+          transparent
+        );
+      }
+
+      .arabic {
+        font-size: 1.3rem;
+        line-height: 1.9;
+        margin-bottom: 10px;
+      }
+
+      .latin {
+        font-style: italic;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+
+      .footer-note {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      /* rapikan tampilan doa di akhir */
+      #screen-doa p,
+      #screen-doa ul {
+        text-align: left;
+      }
+
+      #screen-doa ul {
+        padding-left: 20px;
+        margin-bottom: 8px;
+      }
+
+      /* loading */
+      .loading-bar {
+        width: 100%;
+        height: 10px;
+        background: rgba(148, 163, 184, 0.25);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 14px;
+      }
+
+      .loading-inner {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #6366f1, #ec4899);
+        transition: width 0.15s linear;
+      }
+
+      .loading-text {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        opacity: 0.85;
+      }
+
+      /* slider */
+      .slider-wrap {
+        margin-top: 14px;
+      }
+
+      .slider-wrap input[type="range"] {
+        width: 100%;
+      }
+
+      .slider-value {
+        margin-top: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          align-items: flex-start;
+          padding-top: 16px;
+          padding-bottom: 16px;
+        }
+        .card {
+          padding: 20px 16px;
+          max-height: calc(100vh - 32px);
+          overflow-y: auto;
+        }
+        h1 {
+          font-size: 1.3rem;
+        }
+        h2 {
+          font-size: 1.1rem;
+        }
+        p {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="card">
+        <div class="card-inner">
+          <!-- SCREEN 1: INTRO -->
+          <div id="screen-intro" class="screen active">
+            <div class="emoji-big">💌</div>
+            <div class="badge">Hadiah Seadanya Berelaan</div>
+            <h1>Gasan Amrol &amp; Kiki</h1>
+            <p class="subtitle">Mudahan Tomy Kada Cemburu</p>
+            <p>
+              Jangan Kd Ingat lawan bini pertama:<br />
+              <strong>Tomy Hidayat</strong>
+            </p>
+            <button class="btn" onclick="goToGame1()">Go</button>
+          </div>
+
+          <!-- SCREEN 2: GAME 1 -->
+          <div id="screen-game1" class="screen">
+            <div class="emoji-big">🕵️‍♂️</div>
+            <div class="badge">Game 1</div>
+            <h2>Siapa yang selama ini lebih lama mengawani</h2>
+            <p class="subtitle">Jawab jujur.</p>
+
+            <div class="choices">
+              <button
+                class="choice-btn"
+                id="g1-tomy"
+                onclick="game1Choice('tomy')"
+              >
+                tomy
+              </button>
+              <button
+                class="choice-btn"
+                id="g1-kiki"
+                onclick="game1Choice('kiki')"
+              >
+                kiki
+              </button>
+            </div>
+
+            <div id="msg-game1" class="message"></div>
+
+            <button
+              class="btn"
+              id="btn-goto-game2"
+              style="display: none"
+              onclick="goToGame2()"
+            >
+              Lanjut game 2 😏
+            </button>
+          </div>
+
+          <!-- SCREEN 3: GAME 2 (TOMBOL LARI) -->
+          <div id="screen-game2" class="screen">
+            <div class="emoji-big">💍</div>
+            <div class="badge">Game 2</div>
+            <h2>Siapa lawan Amrol di pelaminan?</h2>
+            <p class="subtitle">Jawab lawan hati nurani</p>
+
+            <div class="choice-area-move" id="game2-area">
+              <button class="choice-btn movable" id="g2-tomy">tomy</button>
+              <button
+                class="choice-btn"
+                id="g2-kiki"
+                onclick="game2Choice('kiki')"
+              >
+                kiki
+              </button>
+            </div>
+
+            <div id="msg-game2" class="message"></div>
+
+            <button
+              class="btn"
+              id="btn-goto-game3"
+              style="display: none"
+              onclick="goToGame3()"
+            >
+              Sip, lanjut sidikit lagi 🤍
+            </button>
+          </div>
+
+          <!-- SCREEN 4: GAME 3 (SLIDER) -->
+          <div id="screen-game3" class="screen">
+            <div class="emoji-big">💞</div>
+            <div class="badge">Game 3</div>
+            <h2>Seberapa siap bahagia berdua?</h2>
+            <p class="subtitle">Geser slider ini</p>
+
+            <div class="slider-wrap">
+              <input
+                type="range"
+                id="happy-range"
+                min="0"
+                max="100"
+                value="40"
+                oninput="updateSlider()"
+              />
+              <div id="slider-value" class="slider-value">
+                siap bahagia: 40%
+              </div>
+            </div>
+
+            <div id="msg-game3" class="message small"></div>
+
+            <button
+              class="btn"
+              id="btn-goto-loading"
+              style="display: none"
+              onclick="goToLoading()"
+            >
+              Cukup, lanjut
+            </button>
+          </div>
+
+          <!-- SCREEN 5: LOADING -->
+          <div id="screen-loading" class="screen">
+            <div class="emoji-big">⏳</div>
+            <div class="badge">Sebentar</div>
+            <h2>Nyusun doa dulu...</h2>
+            <p class="subtitle">
+              Sabar sidikit, sabar itu jua latihan rumah tangga.
+            </p>
+
+            <div class="loading-bar">
+              <div id="loading-inner" class="loading-inner"></div>
+            </div>
+            <div id="loading-text" class="loading-text">0%</div>
+          </div>
+
+          <!-- SCREEN 6: DOA + AUDIO -->
+          <div id="screen-doa" class="screen">
+            <div class="emoji-big">🤍</div>
+            <div class="badge">Doa Pengantin</div>
+            <h2>Gasan Noorrahman Amrollah &amp; Siti Nur Rizkiyani Melati</h2>
+            <p class="subtitle">
+              Begayaan ja tadi berelaan hadiah nya seadanya
+            </p>
+
+            <div class="divider"></div>
+
+            <p class="arabic">
+              بَارَكَ اللهُ لَكَ، وَبَارَكَ عَلَيْكَ، وَجَمَعَ بَيْنَكُمَا فِي
+              خَيْرٍ
+            </p>
+            <p class="latin">
+              Baarakallaahu laka, wa baaraka ‘alayka, wa jama‘a baynakumaa fii
+              khayr.
+            </p>
+            <p>
+              <strong>Kurang lebih artinya:</strong><br />
+              Mudah-mudahan Allah memberkahimu (dalam suka maupun duka), dan
+              semoga Allah mengumpulkan kalian berdua dalam kebaikan.”
+            </p>
+
+            <div class="divider"></div>
+
+            <p>Semoga Allah menjadikan rumah tangga kalian:</p>
+
+            <p>
+              • Tempat pulang yang paling tenang dan penuh kasih sayang, selalu
+              ramai dengan tawa kebahagiaan namun tidak pernah lalai dari ibadah
+              kepada Allah<br />
+              • Diberkahi rezeki yang luas dan barakah, dijaga kesehatan jasmani
+              dan rohani, serta dikaruniai kesabaran yang indah dalam menghadapi
+              setiap ujian hidup<br />
+              • Tetap saling mencinta, saling menguatkan dengan sabar dan penuh
+              rahmah hingga rambut memutih, hingga akhir hayat, lalu dikumpulkan
+              kembali di surga tertinggi dalam keadaan saling tersenyum
+            </p>
+
+            <p>Allah Azza wa Jalla berfirman:</p>
+            <p style="text-align: center; font-style: italic; margin: 25px 0">
+              وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُمْ مِنْ أَنْفُسِكُمْ أَزْوَاجًا
+              لِتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَوَدَّةً وَرَحْمَةً ۚ
+              إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِقَوْمٍ يَتَفَكَّرُونَ
+              <br /><small>(QS. Ar-Rum: 21)</small>
+            </p>
+
+            <p>
+              Ya Allah, sebagaimana Engkau firmankan bahwa di antara tanda
+              kebesaran-Mu adalah Engkau ciptakan pasangan agar mereka saling
+              tenang, saling kasih, dan saling sayang,
+            </p>
+
+            <p>maka jadikanlah kedua mempelai ini:</p>
+            <ul>
+              <li>Rumah tangga yang sakinah, mawaddah wa rahmah</li>
+              <li>Senantiasa saling menjaga dalam ketaatan kepada-Mu</li>
+              <li>
+                Dikaruniai keturunan yang shalih-shalihah, penyejuk hati dan
+                penerus doa
+              </li>
+              <li>
+                Diberi kekuatan untuk saling sabar dan memaafkan sampai akhir
+                usia
+              </li>
+              <li>
+                Dan dikumpulkan kembali di Jannah-Mu yang abadi tanpa hisab
+              </li>
+            </ul>
+
+            <p>Sebagaimana doa Rasulullah ﷺ untuk pengantin:</p>
+            <p style="text-align: center; font-weight: bold; margin: 20px 0">
+              بَارَكَ اللَّهُ لَكَ وَبَارَكَ عَلَيْكَ وَجَمَعَ بَيْنَكُمَا فِي
+              خَيْرٍ
+            </p>
+            <p>
+              “Semoga Allah memberkahimu, melimpahkan keberkahan atasmu, dan
+              mengumpulkan kalian berdua dalam kebaikan.” (HR. Abu Dawud,
+              Tirmidzi, Ibnu Majah – shahih)
+            </p>
+
+            <p>
+              Āmīn yā Rabbal ‘ālamīn… Barakallahu lakuma wa bārakā ‘alaikuma wa
+              jama‘a bainakuma fī khair 🤲
+            </p>
+
+            <p class="footer-note">
+              Tomy tetap bini pertama. Kiki bini sah sampai surga. sedikit lagi
+              jar amrol hndk slot bini nya 2 jer
+            </p>
+
+            <div class="divider"></div>
+
+            <audio id="doa-audio" src="doa.mp3"></audio>
+            <button class="btn" onclick="playDoa()">Putar suara doa 🎧</button>
+
+            <p class="small" style="margin-top: 8px"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showScreen(id) {
+        document.querySelectorAll(".screen").forEach(function (el) {
+          el.classList.remove("active");
+        });
+        document.getElementById(id).classList.add("active");
+      }
+
+      function resetChoices() {
+        document.querySelectorAll(".choice-btn").forEach(function (btn) {
+          btn.classList.remove("correct", "wrong");
+          btn.style.transform = "";
+        });
+      }
+
+      function goToGame1() {
+        showScreen("screen-game1");
+      }
+
+      function goToGame2() {
+        showScreen("screen-game2");
+        setupTomyMover();
+      }
+
+      function goToGame3() {
+        showScreen("screen-game3");
+      }
+
+      function goToLoading() {
+        // di sini pian klik tombol terakhir
+        // kita langsung mulai play audio tapi volume 0
+        const audio = document.getElementById("doa-audio");
+        if (audio) {
+          audio.currentTime = 0;
+          audio.volume = 0; // mulai pelan (mute)
+          audio.play().catch(function () {
+            // kalau gagal ya sudah, nanti masih bisa klik tombol ulangi doa
+          });
+        }
+
+        showScreen("screen-loading");
+        startLoading();
+      }
+
+      function goToDoa() {
+        showScreen("screen-doa");
+        // di sini audio sebenarnya sudah jalan dari tadi, cuma volumenya kita naikkan di loading
+      }
+
+      // GAME 1
+      function game1Choice(who) {
+        resetChoices();
+        const msg = document.getElementById("msg-game1");
+        const btnNext = document.getElementById("btn-goto-game2");
+        const btnTomy = document.getElementById("g1-tomy");
+        const btnKiki = document.getElementById("g1-kiki");
+
+        btnNext.style.display = "none";
+
+        if (who === "tomy") {
+          btnTomy.classList.add("correct");
+          msg.textContent = "Astagfirullah, lebih sayang lawan tomy sekalinya";
+          btnNext.style.display = "inline-flex";
+        } else {
+          btnKiki.classList.add("wrong");
+          msg.textContent = "Astagfirullah, tomy di lupakan kalinya";
+        }
+      }
+
+      // GAME 2 - tombol tomy lari-lari
+      let tomyMoveBound = false;
+
+      function setupTomyMover() {
+        const btnTomy = document.getElementById("g2-tomy");
+        if (!btnTomy || tomyMoveBound) return;
+
+        tomyMoveBound = true;
+
+        btnTomy.addEventListener("mouseenter", function () {
+          const maxX = 60;
+          const maxY = 35;
+          const randX = Math.random() * maxX * 2 - maxX;
+          const randY = Math.random() * maxY * 2 - maxY;
+          btnTomy.style.transform =
+            "translate(" + randX + "px," + randY + "px)";
+        });
+
+        btnTomy.addEventListener("click", function () {
+          const msg = document.getElementById("msg-game2");
+          msg.textContent = "Cinta mati lawan tomy kalinya lah ";
+        });
+      }
+
+      function game2Choice(who) {
+        resetChoices();
+        const msg = document.getElementById("msg-game2");
+        const btnNext = document.getElementById("btn-goto-game3");
+        const btnTomy = document.getElementById("g2-tomy");
+        const btnKiki = document.getElementById("g2-kiki");
+
+        btnNext.style.display = "none";
+
+        if (who === "kiki") {
+          btnKiki.classList.add("correct");
+          msg.textContent = "Nah, nang ini sahnya. Alhamdulillah. 🤍";
+          btnNext.style.display = "inline-flex";
+        } else {
+          btnTomy.classList.add("wrong");
+          msg.textContent = "Tomy jangan baper, ikam tetap kawan legend. 😂";
+        }
+      }
+
+      // GAME 3 - slider
+      function updateSlider() {
+        const range = document.getElementById("happy-range");
+        const value = document.getElementById("slider-value");
+        const msg = document.getElementById("msg-game3");
+        const btnNext = document.getElementById("btn-goto-loading");
+        const val = parseInt(range.value, 10);
+
+        value.textContent = "siap bahagia: " + val + "%";
+
+        if (val < 40) {
+          msg.textContent = "Aih, naikakan sidikit lah, jangan pelit bahagia.";
+          btnNext.style.display = "none";
+        } else if (val < 70) {
+          msg.textContent = "Oke juga, tapi kawa jua ditambah dikit lagi.";
+          btnNext.style.display = "none";
+        } else {
+          msg.textContent = "Gas, sudah cukup niat bahagianya. 🤲";
+          btnNext.style.display = "inline-flex";
+        }
+      }
+
+      // LOADING + NAIKKAN VOLUME AUDIO PELAN-PELAN
+      let loadingInterval = null;
+
+      function startLoading() {
+        const bar = document.getElementById("loading-inner");
+        const text = document.getElementById("loading-text");
+        const audio = document.getElementById("doa-audio");
+        let progress = 0;
+
+        if (loadingInterval) {
+          clearInterval(loadingInterval);
+        }
+
+        loadingInterval = setInterval(function () {
+          progress += 5;
+          if (progress > 100) progress = 100;
+          bar.style.width = progress + "%";
+          text.textContent = progress + "%";
+
+          // mulai naikkan volume sedikit-sedikit setelah 40%
+          if (audio && !isNaN(audio.volume)) {
+            if (progress >= 40 && progress < 100) {
+              if (audio.volume < 1) {
+                audio.volume = Math.min(1, audio.volume + 0.1);
+              }
+            }
+          }
+
+          if (progress === 100) {
+            clearInterval(loadingInterval);
+            // pastikan volumenya sudah 1
+            if (audio && !isNaN(audio.volume)) {
+              audio.volume = 1;
+            }
+            setTimeout(goToDoa, 500);
+          }
+        }, 120);
+      }
+
+      function playDoa(showAlertOnFail = true) {
+        const audio = document.getElementById("doa-audio");
+        if (!audio) return;
+        audio.volume = 1;
+        audio.currentTime = 0;
+        audio.play().catch(function () {
+          if (showAlertOnFail) {
+            alert();
+          }
+        });
+      }
+
+      // set default slider text di awal
+      document.addEventListener("DOMContentLoaded", function () {
+        updateSlider();
+      });
+    </script>
+  </body>
+</html>
